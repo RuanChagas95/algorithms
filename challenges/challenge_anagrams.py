@@ -1,74 +1,73 @@
-def find_index(arr: list, element: int, min, max) -> int:
-    prev_point_index = None
-    if (arr[min + 1]["value"] >= element):
-        return min
-    if (arr[max - 1]["value"] <= element):
-        return max
-    min += 2
-    max -= 1
-    while (min != max):
-        point_index = int((min + max) / 2)
-        if (prev_point_index == point_index):
-            if (prev_point_index == min):
-                point_index += 1
-            else:
-                point_index -= 1
-        prev_point_index = point_index
-        major = element >= arr.get(point_index, {}).get("value", float('-inf'))
-        equal = element == arr.get(point_index, {}).get("value", float('-inf'))
-        if (major and not equal):
-            min = point_index + 1
-        elif (not major and not equal):
-            max = point_index
-        elif (equal):
-            return point_index
+def binary_search(arr: list, element: int,
+                  min_index: int, max_index: int) -> int:
+    while min_index != max_index:
+        point_index = (min_index + max_index) // 2
+        if element > arr[point_index]["value"]:
+            min_index = point_index + 1
         else:
-            min = point_index
-    return min
+            max_index = point_index
+    return min_index
+
+
+def find_index(arr: list, element: int, min_index: int, max_index: int) -> int:
+    if arr[min_index + 1]["value"] >= element:
+        return min_index
+    if arr[max_index - 1]["value"] <= element:
+        return max_index
+    return binary_search(arr, element, min_index + 2, max_index - 1)
+
+
+def update_arr(element, index, new_order, arr):
+    new_order[index] = {"value": element, "deep": []}
+    arr[index] = element
 
 
 def partialSort(orded: dict, first: int, arr: list) -> dict:
     index = 0
     new_order = {}
 
-    def update_arr(element):
-        nonlocal index
-        new_order[index] = {"value": element, "deep": []}
-        arr[index] = element
-        index += 1
     for index_order in range(len(orded)):
         new_order_index = index_order + first
         deep = orded[new_order_index]["deep"]
-        if (len(deep) > 0):
-            if (len(deep) > 1):
+        if len(deep) > 0:
+            if len(deep) > 1:
                 my_sort(deep)
             for element in deep:
-                update_arr(element)
-        update_arr(orded[new_order_index]["value"])
+                update_arr(element, index, new_order, arr)
+                index += 1
+        update_arr(orded[new_order_index]["value"], index, new_order, arr)
+        index += 1
+
     return new_order
 
 
-def my_sort(arr: list) -> list:
-    if (len(arr) < 2):
-        return arr
-    orded = {0: {"value": arr[0], "deep": []}}
-    min = -1
-    max = 1
+def build_ordered_structure(arr: list) -> dict:
+    ordered_structure = {0: {"value": arr[0], "deep": []}}
+    min_index = -1
+    max_index = 1
     for i in range(1, len(arr)):
-        index = find_index(orded, arr[i], min, max)
-        if ((index not in orded)):
-            orded[index] = {"value": arr[i], "deep": []}
-            if (index == min):
-                min -= 1
+        index = find_index(ordered_structure, arr[i], min_index, max_index)
+        if index not in ordered_structure:
+            ordered_structure[index] = {"value": arr[i], "deep": []}
+            if index == min_index:
+                min_index -= 1
             else:
-                max += 1
+                max_index += 1
         else:
-            orded[index]["deep"].append(arr[i])
-            if (len(orded[index]["deep"]) > len(orded)):
-                orded = partialSort(orded, min + 1, arr)
-                max = len(orded)
-                min = -1
-    partialSort(orded, min + 1, arr)
+            ordered_structure[index]["deep"].append(arr[i])
+            if len(ordered_structure[index]["deep"]) > len(ordered_structure):
+                ordered_structure = partialSort(
+                    ordered_structure, min_index + 1, arr)
+                max_index = len(ordered_structure)
+                min_index = -1
+    partialSort(ordered_structure, min_index + 1, arr)
+    return ordered_structure
+
+
+def my_sort(arr: list) -> list:
+    if len(arr) < 2:
+        return arr
+    build_ordered_structure(arr)
     return arr
 
 
