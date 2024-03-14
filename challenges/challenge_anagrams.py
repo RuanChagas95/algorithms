@@ -65,6 +65,8 @@ def build_ordered_structure(arr: list) -> dict:
 
 
 def my_sort(arr: list) -> list:
+    if len(arr) == 2:
+        return arr[0] > arr[1] and arr.reverse() or arr
     if len(arr) < 2:
         return arr
     build_ordered_structure(arr)
